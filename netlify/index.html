@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071014">
+  <meta name="description" content="MotionTwin 3D — синхронизация двух камер и живой анатомичный 3D-двойник.">
+  <title>MotionTwin 3D</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="host-app" class="host-app">
+    <header class="topbar">
+      <div class="brand" aria-label="MotionTwin 3D">
+        <span class="brand-mark"><i></i><i></i></span>
+        <span><strong>MotionTwin</strong><small>LIVE 3D</small></span>
+      </div>
+      <div id="global-status" class="global-status" data-tone="idle">
+        <span class="status-dot"></span><span id="global-status-text">Готов к запуску</span>
+      </div>
+      <div class="top-actions">
+        <label class="quality-control"><span>Режим</span>
+          <select id="quality-profile" aria-label="Профиль качества">
+            <option value="balanced">Баланс</option>
+            <option value="quality">Качество</option>
+            <option value="speed" selected>Быстро</option>
+          </select>
+        </label>
+        <button id="start-host" class="primary-button">Запустить</button>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="camera-rail" aria-label="Камеры">
+        <article class="camera-card">
+          <header><span class="camera-title"><i class="camera-index">1</i> Ноутбук</span><span id="front-state" class="camera-state" data-tone="idle">Выкл.</span></header>
+          <div class="camera-view mirror">
+            <video id="front-video" muted playsinline></video><canvas id="front-overlay"></canvas>
+            <div id="front-empty" class="camera-empty"><span class="camera-icon"></span><strong>Фронтальный ракурс</strong><small>Поставьте ноутбук перед собой</small></div>
+          </div>
+          <footer><span id="front-hint">Голова и стопы должны быть в кадре</span><b id="front-fps">— FPS</b></footer>
+        </article>
+
+        <article class="camera-card">
+          <header><span class="camera-title"><i class="camera-index">2</i> Телефон</span><span id="side-state" class="camera-state" data-tone="idle">Ожидание</span></header>
+          <div class="camera-view">
+            <video id="side-video" muted playsinline></video><canvas id="side-overlay"></canvas>
+            <div id="side-empty" class="camera-empty"><span class="phone-icon"></span><strong>Боковой ракурс</strong><small>Подключите телефон по QR</small></div>
+          </div>
+          <footer><span id="side-hint">Угол к ноутбуку: 70–110°</span><b id="side-fps">— FPS</b></footer>
+        </article>
+
+        <article class="pair-card">
+          <div id="pair-placeholder" class="pair-placeholder"><span class="qr-skeleton"></span><p>После запуска здесь появится QR‑код для телефона.</p></div>
+          <div id="pair-ready" class="pair-ready hidden"><div id="qr-code" class="qr-code"></div><div><strong>Вторая камера</strong><p>Откройте камеру телефона и отсканируйте код.</p></div></div>
+          <div id="pair-connected" class="pair-connected hidden"><span class="connected-check">✓</span><div><strong>Телефон подключён</strong><p>Не двигайте камеры после калибровки.</p></div></div>
+        </article>
+      </aside>
+
+      <section class="stage-card" aria-label="3D-робот">
+        <header class="stage-header">
+          <div><span class="eyebrow">3D-СКЕЛЕТ</span><h1>Ваше движение в 3D</h1></div>
+          <div id="fusion-badge" class="fusion-badge" data-tone="idle"><span></span><b id="fusion-title">Ожидание камер</b></div>
+        </header>
+        <div id="stage" class="stage">
+          <div class="stage-vignette"></div>
+          <div class="calibration-panel">
+            <div class="calibration-copy"><span id="calibration-step">Автокалибровка</span><strong id="calibration-message">Запустите камеру ноутбука</strong></div>
+            <div class="progress-track" aria-hidden="true"><i id="calibration-progress"></i></div>
+          </div>
+          <div class="stage-stats">
+            <div><small>РЕНДЕР</small><strong id="render-fps">—</strong></div>
+            <div><small>СИНХР.</small><strong id="sync-latency">—</strong></div>
+            <div><small>ТОЧНОСТЬ</small><strong id="tracking-quality">—</strong></div>
+          </div>
+          <div class="camera-legend"><span><i class="legend-front"></i> фронт</span><span><i class="legend-side"></i> бок</span></div>
+        </div>
+        <footer class="stage-footer">
+          <div class="signal-row"><span id="signal-front"><i></i> Камера 1</span><span id="signal-side"><i></i> Камера 2</span><span id="signal-floor"><i></i> Пол</span><span id="signal-body"><i></i> Тело целиком</span></div>
+          <button id="export-session" class="ghost-button" disabled>Сохранить данные</button>
+        </footer>
+      </section>
+    </section>
+  </main>
+
+  <main id="phone-app" class="phone-app hidden">
+    <section class="phone-shell">
+      <header class="phone-header">
+        <div class="brand compact"><span class="brand-mark"><i></i><i></i></span><span><strong>MotionTwin</strong><small>КАМЕРА 2</small></span></div>
+        <span id="phone-connection" class="phone-connection" data-tone="idle">Не подключено</span>
+      </header>
+      <div id="phone-view" class="phone-view portrait">
+        <video id="phone-video" muted playsinline></video><canvas id="phone-overlay"></canvas>
+        <div id="phone-empty" class="phone-empty"><span class="phone-big-icon"></span><strong>Боковая камера</strong><p>Поставьте телефон сбоку так, чтобы были видны голова и стопы.</p></div>
+        <div class="phone-hud"><span id="phone-fps">— FPS</span><span id="phone-body-state">Ожидание</span></div>
+      </div>
+      <section class="phone-controls">
+        <div class="control-group"><span>Камера</span><div class="segmented"><button id="phone-front">Фронтальная</button><button id="phone-back" class="active">Задняя</button></div></div>
+        <div class="control-group"><span>Положение</span><div class="segmented"><button id="phone-portrait" class="active">Вертикально</button><button id="phone-landscape">Горизонтально</button></div></div>
+        <button id="start-phone" class="primary-button phone-start">Подключить камеру</button>
+        <p id="phone-message" class="phone-message">Видео появится сразу. Анализ движения подключится после загрузки модели.</p>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
